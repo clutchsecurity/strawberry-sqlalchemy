@@ -462,7 +462,7 @@ class StrawberrySQLAlchemyMapper(Generic[BaseModelType]):
         connection_type = self._connection_type_for(type_name)
         edge_type = self._edge_type_for(type_name)
 
-        async def wrapper(self, info: Info):
+        async def wrapper(self, info: Info, **kwargs: object):
             # TODO: Add pagination support to dataloader resolvers
             edges = [
                 edge_type.resolve_edge(
