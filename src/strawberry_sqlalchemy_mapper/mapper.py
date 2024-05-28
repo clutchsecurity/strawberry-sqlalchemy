@@ -498,6 +498,10 @@ class StrawberrySQLAlchemyMapper(Generic[BaseModelType]):
             if relationship.key not in instance_state.unloaded:
                 related_objects = getattr(self, relationship.key)
             else:
+                related_objects = getattr(self, relationship.key, None)
+                if related_objects is not None:
+                    return related_objects
+                    
                 relationship_key = tuple(
                     [
                         getattr(self, local.key)
