@@ -641,6 +641,7 @@ class StrawberrySQLAlchemyMapper(Generic[BaseModelType]):
         model: Type[BaseModelType],
         make_interface=False,
         use_federation=False,
+        description: Optional[str] = None,
     ) -> Callable[[Type[object]], Any]:
         """
         Decorate a type with this to register it as a strawberry type
@@ -825,13 +826,13 @@ class StrawberrySQLAlchemyMapper(Generic[BaseModelType]):
             type_.__annotations__.update(old_annotations)
 
             if make_interface:
-                mapped_type = strawberry.interface(type_)
+                mapped_type = strawberry.interface(type_, description=description)
                 self.mapped_interfaces[type_.__name__] = mapped_type
             elif use_federation:
-                mapped_type = strawberry.federation.type(type_)
+                mapped_type = strawberry.federation.type(type_, description=description)
                 self.mapped_types[type_.__name__] = mapped_type
             else:
-                mapped_type = strawberry.type(type_)
+                mapped_type = strawberry.type(type_, description=description)
                 self.mapped_types[type_.__name__] = mapped_type
 
             setattr(
