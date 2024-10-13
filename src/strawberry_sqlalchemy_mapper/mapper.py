@@ -411,14 +411,14 @@ class StrawberrySQLAlchemyMapper(Generic[BaseModelType]):
             return False
 
     def _add_annotation(
-        self, type_: Any, key: str, annotation: Any, generated_field_keys: List[str]
+        self, type_: Any, key: str, annotation: Any, generated_field_keys: List[str], description: Optional[str] = None
     ) -> None:
         """
         Add type annotation to the given type.
         """
         type_.__annotations__[key] = annotation
         if not hasattr(type_, key):
-            setattr(type_, key, field())
+            setattr(type_, key, field(description=description))
         generated_field_keys.append(key)
 
     def _get_association_proxy_annotation(
@@ -633,6 +633,7 @@ class StrawberrySQLAlchemyMapper(Generic[BaseModelType]):
                     key,
                     type_annotation,
                     generated_field_keys,
+                    description=column.doc,
                 )
 
     def type(
