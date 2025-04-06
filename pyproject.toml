@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "strawberry-sqlalchemy-mapper"
 packages = [ { include = "strawberry_sqlalchemy_mapper", from = "src" } ]
-version = "0.4.4"
+version = "0.4.5"
 description = "A library for autogenerating Strawberry GraphQL types from SQLAlchemy models."
 authors = ["Tim Dumol <tim@timdumol.com>"]
 license = "MIT"
@@ -39,9 +39,9 @@ build-backend = "poetry.masonry.api"
 version_scheme = "no-guess-dev"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.12"
 sqlalchemy = {extras = ["asyncio"], version = ">=1.4"}
-strawberry-graphql = ">=0.95"
+strawberry-graphql = "^0.263.0"
 sentinel = ">=0.3,<1.1"
 greenlet = {version = ">=3.0.0rc1", python = ">=3.12"}
 sqlakeyset = "^2.0.1695177552"
@@ -99,6 +99,8 @@ ignore = [
     "UP007",
 
     "TID252",
+    "T201",
+
     # we use asserts in tests and to hint mypy
     "S101",
     "S102",
@@ -110,9 +112,8 @@ ignore = [
     "ANN001", # missing annotation for function argument self.
     "ANN002", # missing annotation for *args.
     "ANN003", # missing annotatino for **kwargs.
-    "ANN101", # missing annotation for self?
+
     # definitely enable these, maybe not in tests
-    "ANN102",
     "ANN202",
     "ANN204",
     "ANN205",
@@ -157,7 +158,6 @@ ignore = [
 
     # enable these, we have some in tests
     "B006",
-    "PT004",
     "PT007",
     "PT011",
     "PT012",
@@ -225,6 +225,8 @@ ignore = [
     "FIX001",
     "FIX002",
     "FA100",
+
+    "LOG015"
 ]
 fix = true
 exclude = [

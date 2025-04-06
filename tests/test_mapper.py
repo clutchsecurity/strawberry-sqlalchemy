@@ -8,7 +8,7 @@ from sqlalchemy import JSON, Column, Enum, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql.array import ARRAY
 from sqlalchemy.orm import relationship
 from strawberry.scalars import JSON as StrawberryJSON
-from strawberry.type import StrawberryOptional
+from strawberry.types.base import StrawberryOptional
 from strawberry_sqlalchemy_mapper import StrawberrySQLAlchemyMapper
 
 
@@ -126,10 +126,10 @@ def test_get_polymorphic_base_model(polymorphic_employee_table, mapper):
     Employee = polymorphic_employee_table
 
     class Lawyer(Employee):
-        pass
+        __mapper_args__ = {"polymorphic_identity": "lawyer"}
 
     class ParaLegal(Lawyer):
-        pass
+        __mapper_args__ = {"polymorphic_identity": "paralegal"}
 
     assert mapper._get_polymorphic_base_model(Employee) == Employee
     assert mapper._get_polymorphic_base_model(Lawyer) == Employee
@@ -151,9 +151,9 @@ def test_convert_all_columns_to_strawberry_type(mapper):
 
 def test_convert_column_to_strawberry_type(mapper):
     int_column = Column(Integer, nullable=False)
-    assert mapper._convert_column_to_strawberry_type(int_column) == int
+    assert mapper._convert_column_to_strawberry_type(int_column) is int
     string_column = Column(String, nullable=False)
-    assert mapper._convert_column_to_strawberry_type(string_column) == str
+    assert mapper._convert_column_to_strawberry_type(string_column) is str
 
 
 def test_convert_json_column_to_strawberry_type(mapper):
@@ -228,12 +228,12 @@ def test_type_simple(employee_table, mapper):
     assert len(additional_types) == 1
     mapped_employee_type = additional_types[0]
     assert mapped_employee_type.__name__ == "Employee"
-    assert len(mapped_employee_type.__strawberry_definition__._fields) == 2
-    employee_type_fields = mapped_employee_type.__strawberry_definition__._fields
+    assert len(mapped_employee_type.__strawberry_definition__.fields) == 2
+    employee_type_fields = mapped_employee_type.__strawberry_definition__.fields
     name = next(iter(filter(lambda f: f.name == "name", employee_type_fields)))
-    assert name.type == str
+    assert name.type is str
     id = next(iter(filter(lambda f: f.name == "id", employee_type_fields)))
-    assert id.type == int
+    assert id.type is int
 
 
 def test_interface_and_type_polymorphic(
@@ -275,12 +275,12 @@ def test_type_relationships(employee_and_department_tables, mapper):
     assert len(additional_types) == 2
     mapped_employee_type = additional_types[0]
     assert mapped_employee_type.__name__ == "Employee"
-    assert len(mapped_employee_type.__strawberry_definition__._fields) == 4
-    employee_type_fields = mapped_employee_type.__strawberry_definition__._fields
+    assert len(mapped_employee_type.__strawberry_definition__.fields) == 4
+    employee_type_fields = mapped_employee_type.__strawberry_definition__.fields
     name = next(iter(filter(lambda f: f.name == "department_id", employee_type_fields)))
-    assert type(name.type) == StrawberryOptional
+    assert type(name.type) is StrawberryOptional
     id = next(iter(filter(lambda f: f.name == "department", employee_type_fields)))
-    assert type(id.type) == StrawberryOptional
+    assert type(id.type) is StrawberryOptional
 
 
 def test_relationships_schema(employee_and_department_tables, mapper):
@@ -297,8 +297,7 @@ def test_relationships_schema(employee_and_department_tables, mapper):
     @strawberry.type
     class Query:
         @strawberry.field
-        def departments(self) -> Department:
-            ...
+        def departments(self) -> Department: ...
 
     mapper.finalize()
     schema = strawberry.Schema(query=Query)

@@ -68,16 +68,13 @@ from sqlalchemy.orm import (
     Mapper,
     RelationshipProperty,
 )
-from sqlalchemy.orm.state import InstanceState
 from sqlalchemy.sql.type_api import TypeEngine
-from strawberry import relay
+from strawberry import LazyType, relay
 from strawberry.annotation import StrawberryAnnotation
-from strawberry.field import StrawberryField
-from strawberry.lazy_type import LazyType
-from strawberry.private import is_private
 from strawberry.scalars import JSON as StrawberryJSON
-from strawberry.type import WithStrawberryObjectDefinition, get_object_definition
 from strawberry.types import Info
+from strawberry.types.base import WithStrawberryObjectDefinition, get_object_definition
+from strawberry.types.private import is_private
 
 from strawberry_sqlalchemy_mapper.exc import (
     HybridPropertyNotAnnotated,
@@ -96,12 +93,14 @@ from strawberry_sqlalchemy_mapper.relay import (
 from strawberry_sqlalchemy_mapper.scalars import BigInt
 
 if TYPE_CHECKING:
+    from sqlalchemy.orm.state import InstanceState
     from sqlalchemy.sql.expression import ColumnElement
+    from strawberry.types.field import StrawberryField
 
 BaseModelType = TypeVar("BaseModelType")
 
 SkipTypeSentinelT = NewType("SkipTypeSentinelT", object)
-SkipTypeSentinel = cast(SkipTypeSentinelT, sentinel.create("SkipTypeSentinel"))
+SkipTypeSentinel = cast("SkipTypeSentinelT", sentinel.create("SkipTypeSentinel"))
 
 
 #: Set on generated types to the original type handed to the decorator
@@ -150,13 +149,11 @@ class StrawberrySQLAlchemyType(Generic[BaseModelType]):
 
     @overload
     @classmethod
-    def from_type(cls, type_: type, *, strict: Literal[True]) -> Self:
-        ...
+    def from_type(cls, type_: type, *, strict: Literal[True]) -> Self: ...
 
     @overload
     @classmethod
-    def from_type(cls, type_: type, *, strict: bool = False) -> Optional[Self]:
-        ...
+    def from_type(cls, type_: type, *, strict: bool = False) -> Optional[Self]: ...
 
     @classmethod
     def from_type(
@@ -494,7 +491,7 @@ class StrawberrySQLAlchemyMapper(Generic[BaseModelType]):
         """
 
         async def resolve(self, info: Info):
-            instance_state = cast(InstanceState, inspect(self))
+            instance_state = cast("InstanceState", inspect(self))
             if relationship.key not in instance_state.unloaded:
                 related_objects = getattr(self, relationship.key)
             else:
@@ -662,7 +659,7 @@ class StrawberrySQLAlchemyMapper(Generic[BaseModelType]):
             type_.__annotations__ = {
                 k: v for k, v in old_annotations.items() if is_private(v)
             }
-            mapper: Mapper = cast(Mapper, inspect(model))
+            mapper: Mapper = cast("Mapper", inspect(model))
             generated_field_keys = []
 
             excluded_keys = getattr(type_, "__exclude__", [])
@@ -699,7 +696,7 @@ class StrawberrySQLAlchemyMapper(Generic[BaseModelType]):
                     generated_field_keys,
                 )
                 sqlalchemy_field = cast(
-                    StrawberryField,
+                    "StrawberryField",
                     field(resolver=self.connection_resolver_for(relationship)),
                 )
                 assert not sqlalchemy_field.init
@@ -738,7 +735,7 @@ class StrawberrySQLAlchemyMapper(Generic[BaseModelType]):
                         type_, key, strawberry_type, generated_field_keys
                     )
                     sqlalchemy_field = cast(
-                        StrawberryField,
+                        "StrawberryField",
                         field(
                             resolver=self.association_proxy_resolver_for(
                                 mapper,
@@ -776,7 +773,7 @@ class StrawberrySQLAlchemyMapper(Generic[BaseModelType]):
             # ignore inherited `is_type_of`
             if "is_type_of" not in type_.__dict__:
                 type_.is_type_of = (
-                    lambda obj, info: type(obj) == model or type(obj) == type_
+                    lambda obj, info: type(obj) is model or type(obj) is type_
                 )
 
             # Default querying methods for relay
@@ -809,7 +806,7 @@ class StrawberrySQLAlchemyMapper(Generic[BaseModelType]):
                         setattr(
                             type_,
                             attr,
-                            types.MethodType(cast(classmethod, meth).__func__, type_),
+                            types.MethodType(cast("classmethod", meth).__func__, type_),
                         )
 
             # need to make fields that are already in the type

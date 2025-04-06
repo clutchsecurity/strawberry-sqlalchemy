@@ -1,3 +1,4 @@
+# ruff: noqa: ERA001
 # This file is execfile()d with the current directory set to its containing dir.
 #
 # This file only contains a selection of the most common options. For a full
@@ -8,17 +9,19 @@
 # serve to show the default.
 
 import os
-import sys
 import shutil
+import sys
+from contextlib import suppress
+from pathlib import Path
 
 # -- Path setup --------------------------------------------------------------
 
-__location__ = os.path.dirname(__file__)
+__location__ = Path(__file__).parent
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.join(__location__, "../src"))
+sys.path.insert(0, str(__location__ / "../src"))
 
 # -- Run sphinx-apidoc -------------------------------------------------------
 # This hack is necessary since RTD does not issue `sphinx-apidoc` before running
@@ -33,12 +36,11 @@ try:  # for Sphinx >= 1.7
 except ImportError:
     from sphinx import apidoc
 
-output_dir = os.path.join(__location__, "api")
-module_dir = os.path.join(__location__, "../src/strawberry_sqlalchemy_mapper")
-try:
+output_dir = __location__ / "api"
+module_dir = __location__ / "../src/strawberry_sqlalchemy_mapper"
+
+with suppress(FileNotFoundError):
     shutil.rmtree(output_dir)
-except FileNotFoundError:
-    pass
 
 try:
     import sphinx
@@ -52,7 +54,7 @@ try:
 
     apidoc.main(args)
 except Exception as e:
-    print("Running `sphinx-apidoc` failed!\n{}".format(e))
+    print(f"Running `sphinx-apidoc` failed!\n{e}")
 
 # -- General configuration ---------------------------------------------------
 
@@ -96,7 +98,7 @@ copyright = "2022, Tim Dumol"
 #
 # version: The short X.Y version.
 # release: The full version, including alpha/beta/rc tags.
-# If you don’t need the separation provided between version and release,
+# If you don't need the separation provided between version and release,
 # just set them both to the same value.
 try:
     from strawberry_sqlalchemy_mapper import __version__ as version
@@ -158,10 +160,7 @@ html_theme = "alabaster"
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {
-    "sidebar_width": "300px",
-    "page_width": "1200px"
-}
+html_theme_options = {"sidebar_width": "300px", "page_width": "1200px"}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
@@ -246,7 +245,13 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ("index", "user_guide.tex", "strawberry-sqlalchemy-mapper Documentation", "Tim Dumol", "manual")
+    (
+        "index",
+        "user_guide.tex",
+        "strawberry-sqlalchemy-mapper Documentation",
+        "Tim Dumol",
+        "manual",
+    )
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

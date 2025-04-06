@@ -22,7 +22,8 @@ from sqlalchemy.inspection import inspect as sqlalchemy_inspect
 from strawberry import relay
 from strawberry.relay.exceptions import NodeIDAnnotationError
 from strawberry.relay.types import NodeType
-from strawberry.type import StrawberryContainer, get_object_definition
+from strawberry.types import get_object_definition
+from strawberry.types.base import StrawberryContainer
 
 if TYPE_CHECKING:
     from typing_extensions import Literal, Self
@@ -100,7 +101,7 @@ class KeysetConnection(relay.Connection[NodeType]):
             while isinstance(field, StrawberryContainer):
                 field = field.of_type
 
-            edge_class = cast(Edge[NodeType], field)
+            edge_class = cast("Edge[NodeType]", field)
 
             return cls(
                 page_info=relay.PageInfo(
@@ -158,8 +159,7 @@ def resolve_model_nodes(
     info: Optional[Info] = None,
     node_ids: Iterable[Union[str, relay.GlobalID]],
     required: Literal[True],
-) -> AwaitableOrValue[Iterable[_T]]:
-    ...
+) -> AwaitableOrValue[Iterable[_T]]: ...
 
 
 @overload
@@ -174,8 +174,7 @@ def resolve_model_nodes(
     info: Optional[Info] = None,
     node_ids: None = None,
     required: Literal[True],
-) -> AwaitableOrValue[Iterable[_T]]:
-    ...
+) -> AwaitableOrValue[Iterable[_T]]: ...
 
 
 @overload
@@ -190,8 +189,7 @@ def resolve_model_nodes(
     info: Optional[Info] = None,
     node_ids: Iterable[Union[str, relay.GlobalID]],
     required: Literal[False],
-) -> AwaitableOrValue[Iterable[Optional[_T]]]:
-    ...
+) -> AwaitableOrValue[Iterable[Optional[_T]]]: ...
 
 
 @overload
@@ -206,8 +204,7 @@ def resolve_model_nodes(
     info: Optional[Info] = None,
     node_ids: None = None,
     required: Literal[False],
-) -> AwaitableOrValue[Optional[Iterable[_T]]]:
-    ...
+) -> AwaitableOrValue[Optional[Iterable[_T]]]: ...
 
 
 @overload
@@ -229,8 +226,7 @@ def resolve_model_nodes(
         Iterable[Optional[_T]],
         Optional[Query[_T]],
     ]
-]:
-    ...
+]: ...
 
 
 def resolve_model_nodes(
@@ -279,7 +275,7 @@ def resolve_model_nodes(
     query = session.query(model)
 
     if node_ids:
-        attrs = cast(relay.Node, source).resolve_id_attr().split("|")
+        attrs = cast("relay.Node", source).resolve_id_attr().split("|")
         converters = [getattr(model, attr).type.python_type for attr in attrs]
         filters = [
             and_(
@@ -307,8 +303,7 @@ def resolve_model_node(
     session: Session,
     info: Optional[Info] = ...,
     required: Literal[False] = ...,
-) -> AwaitableOrValue[Optional[_T]]:
-    ...
+) -> AwaitableOrValue[Optional[_T]]: ...
 
 
 @overload
@@ -323,8 +318,7 @@ def resolve_model_node(
     session: Session,
     info: Optional[Info] = ...,
     required: Literal[True],
-) -> AwaitableOrValue[_T]:
-    ...
+) -> AwaitableOrValue[_T]: ...
 
 
 def resolve_model_node(
@@ -412,7 +406,7 @@ def resolve_model_id(
 
     In case of composed primary keys, those will be returned separated by a `|`.
     """
-    id_attr = cast(relay.Node, source).resolve_id_attr().split("|")
+    id_attr = cast("relay.Node", source).resolve_id_attr().split("|")
 
     assert id_attr
     # TODO: Maybe we can work with the tuples directly in the future?

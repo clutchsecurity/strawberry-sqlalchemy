@@ -31,25 +31,18 @@ from typing_extensions import Annotated, TypeAlias
 from sqlakeyset.types import Keyset
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Query, Session
-from strawberry import relay
+from strawberry import BasePermission, Info, argument, relay
 from strawberry.annotation import StrawberryAnnotation
-from strawberry.arguments import StrawberryArgument, argument
-from strawberry.extensions.field_extension import (
-    FieldExtension,
-)
-from strawberry.field import (
-    _RESOLVER_TYPE,
-    StrawberryField,
-)
-from strawberry.permission import BasePermission
+from strawberry.extensions import FieldExtension
 from strawberry.relay.exceptions import RelayWrongAnnotationError
 from strawberry.relay.types import NodeIterableType
-from strawberry.type import (
+from strawberry.types.arguments import StrawberryArgument
+from strawberry.types.base import (
     StrawberryList,
     StrawberryOptional,
     get_object_definition,
 )
-from strawberry.types import Info
+from strawberry.types.field import _RESOLVER_TYPE, StrawberryField
 from strawberry.types.fields.resolver import StrawberryResolver
 from strawberry.utils.aio import asyncgen_to_list
 
@@ -59,17 +52,17 @@ _SessionMaker: TypeAlias = Callable[[], Union[Session, AsyncSession]]
 assert argument  # type: ignore[truthy-function]
 
 
-connection_session: contextvars.ContextVar[
-    Union[Session, AsyncSession, None]
-] = contextvars.ContextVar(
-    "connection-session",
-    default=None,
+connection_session: contextvars.ContextVar[Union[Session, AsyncSession, None]] = (
+    contextvars.ContextVar(
+        "connection-session",
+        default=None,
+    )
 )
 
 
 @contextlib.contextmanager
 def set_connection_session(
-    s: Union[Session, AsyncSession, None]
+    s: Union[Session, AsyncSession, None],
 ) -> Generator[None, None, None]:
     token = connection_session.set(s)
     try:
@@ -273,7 +266,7 @@ class StrawberrySQLAlchemyNodeExtension(relay.NodeExtension):
 
             # Resolve any generator to lists
             resolved = {
-                node_t: list(cast(Iterator[relay.Node], nodes))
+                node_t: list(cast("Iterator[relay.Node]", nodes))
                 for node_t, nodes in resolved_nodes.items()
             }
             return [resolved[index_map[gid][0]][index_map[gid][1]] for gid in ids]
@@ -297,7 +290,7 @@ class StrawberrySQLAlchemyConnectionExtension(relay.ConnectionExtension):
             )
 
         if node_type is None:
-            raise RelayWrongAnnotationError(field.name, cast(type, field.origin))
+            raise RelayWrongAnnotationError(field.name, cast("type", field.origin))
 
         assert isinstance(node_type, type)
         sqlalchemy_definition = StrawberrySQLAlchemyType[Any].from_type(
@@ -340,7 +333,7 @@ class StrawberrySQLAlchemyConnectionExtension(relay.ConnectionExtension):
 
                 if isinstance(session, AsyncSession):
                     return cast(
-                        Iterable[Any],
+                        "Iterable[Any]",
                         StrawberrySQLAlchemyAsyncQuery(
                             session=session,
                             query=lambda s: _get_query(s),
@@ -415,8 +408,7 @@ def field(
     graphql_type: Any | None = None,
     extensions: Sequence[FieldExtension] = (),
     sessionmaker: _SessionMaker | None = None,
-) -> _T:
-    ...
+) -> _T: ...
 
 
 @overload
@@ -437,8 +429,7 @@ def field(
     graphql_type: Any | None = None,
     extensions: Sequence[FieldExtension] = (),
     sessionmaker: _SessionMaker | None = None,
-) -> Any:
-    ...
+) -> Any: ...
 
 
 @overload
@@ -459,8 +450,7 @@ def field(
     graphql_type: Any | None = None,
     extensions: Sequence[FieldExtension] = (),
     sessionmaker: _SessionMaker | None = None,
-) -> StrawberrySQLAlchemyField:
-    ...
+) -> StrawberrySQLAlchemyField: ...
 
 
 def field(
@@ -512,7 +502,7 @@ def field(
         default_factory=default_factory,
         metadata=metadata,
         directives=directives or (),
-        extensions=cast(List[FieldExtension], extensions),
+        extensions=cast("List[FieldExtension]", extensions),
         sessionmaker=sessionmaker,
     )
 
@@ -599,8 +589,7 @@ def connection(
     extensions: Sequence[FieldExtension] = (),
     sessionmaker: _SessionMaker | None = None,
     keyset: Keyset | None = None,
-) -> Any:
-    ...
+) -> Any: ...
 
 
 @overload
@@ -622,8 +611,7 @@ def connection(
     extensions: Sequence[FieldExtension] = (),
     sessionmaker: _SessionMaker | None = None,
     keyset: Keyset | None = None,
-) -> Any:
-    ...
+) -> Any: ...
 
 
 def connection(
