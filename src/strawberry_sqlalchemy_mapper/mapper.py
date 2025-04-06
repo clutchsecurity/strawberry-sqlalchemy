@@ -408,14 +408,19 @@ class StrawberrySQLAlchemyMapper(Generic[BaseModelType]):
             return False
 
     def _add_annotation(
-        self, type_: Any, key: str, annotation: Any, generated_field_keys: List[str]
+        self,
+        type_: Any,
+        key: str,
+        annotation: Any,
+        generated_field_keys: List[str],
+        description: Optional[str] = None,
     ) -> None:
         """
         Add type annotation to the given type.
         """
         type_.__annotations__[key] = annotation
         if not hasattr(type_, key):
-            setattr(type_, key, field())
+            setattr(type_, key, field(description=description))
         generated_field_keys.append(key)
 
     def _get_association_proxy_annotation(
@@ -459,7 +464,7 @@ class StrawberrySQLAlchemyMapper(Generic[BaseModelType]):
         connection_type = self._connection_type_for(type_name)
         edge_type = self._edge_type_for(type_name)
 
-        async def wrapper(self, info: Info):
+        async def wrapper(self, info: Info, **kwargs: object):
             # TODO: Add pagination support to dataloader resolvers
             edges = [
                 edge_type.resolve_edge(
@@ -490,11 +495,15 @@ class StrawberrySQLAlchemyMapper(Generic[BaseModelType]):
         so as to avoid n+1 query problem.
         """
 
-        async def resolve(self, info: Info):
+        async def resolve(self, info: Info, **kwargs: object):
             instance_state = cast("InstanceState", inspect(self))
             if relationship.key not in instance_state.unloaded:
                 related_objects = getattr(self, relationship.key)
             else:
+                related_objects = getattr(self, relationship.key, None)
+                if related_objects is not None:
+                    return related_objects
+
                 relationship_key = tuple(
                     [
                         getattr(self, local.key)
@@ -626,6 +635,7 @@ class StrawberrySQLAlchemyMapper(Generic[BaseModelType]):
                     key,
                     type_annotation,
                     generated_field_keys,
+                    description=column.doc,
                 )
 
     def type(
@@ -633,6 +643,7 @@ class StrawberrySQLAlchemyMapper(Generic[BaseModelType]):
         model: Type[BaseModelType],
         make_interface=False,
         use_federation=False,
+        description: Optional[str] = None,
     ) -> Callable[[Type[object]], Any]:
         """
         Decorate a type with this to register it as a strawberry type
@@ -817,13 +828,13 @@ class StrawberrySQLAlchemyMapper(Generic[BaseModelType]):
             type_.__annotations__.update(old_annotations)
 
             if make_interface:
-                mapped_type = strawberry.interface(type_)
+                mapped_type = strawberry.interface(type_, description=description)
                 self.mapped_interfaces[type_.__name__] = mapped_type
             elif use_federation:
-                mapped_type = strawberry.federation.type(type_)
+                mapped_type = strawberry.federation.type(type_, description=description)
                 self.mapped_types[type_.__name__] = mapped_type
             else:
-                mapped_type = strawberry.type(type_)
+                mapped_type = strawberry.type(type_, description=description)
                 self.mapped_types[type_.__name__] = mapped_type
 
             setattr(
